@@ -29,7 +29,7 @@ Value Value::operator+(const Value& op) const{
             //If we get here, op was either a string or a float and therefore invalid
             return Value();
 
-        //If we have an int, we can add with either a real or an int
+        //If we have a real, we can add with either a real or an int
         case VREAL:
             if(op.GetType() == VINT){
                 //cast to a float
@@ -54,7 +54,7 @@ Value Value::operator+(const Value& op) const{
 //Subtraction may occur only between ints and reals
 Value Value::operator-(const Value& op) const{
      switch(GetType()){
-        //If we have an int, we can add with either a real or an int
+        //If we have an int, we can subtract with either a real or an int
         case VINT:
             if(op.GetType() == VINT){
                 //we can have two ints, no casting needed
@@ -69,7 +69,7 @@ Value Value::operator-(const Value& op) const{
             //If we get here, op was either a string or a float and therefore invalid
             return Value();
 
-        //If we have an int, we can add with either a real or an int
+        //If we have a real, we can subtract with either a real or an int
         case VREAL:
             if(op.GetType() == VINT){
                 //cast to a float
@@ -91,13 +91,50 @@ Value Value::operator-(const Value& op) const{
 }
 
 
+//Multiplication may only occur between ints and reals
+Value Value::operator*(const Value& op) const{
+    switch(GetType()){
+        //If we have an int, we can multiply with either a real or an int
+        case VINT:
+            if(op.GetType() == VINT){
+                //we can have two ints, no casting needed
+                return Value(GetInt() * op.GetInt());
+            }
 
+            if (op.GetType() == VREAL){
+                //here we'll need to cast to the broader type
+                return Value((float)GetInt() * op.GetReal());
+            }
+            
+            //If we get here, op was either a string or a float and therefore invalid
+            return Value();
+
+        //If we have a real, we can multiply with either a real or an int
+        case VREAL:
+            if(op.GetType() == VINT){
+                //cast to a float
+                return Value(GetReal() * (float)op.GetInt());
+            }
+
+            if (op.GetType() == VREAL){
+                //no need for casting here
+                return Value(GetReal() * op.GetReal());
+            }
+            
+            //If we get here, op was either a string or a float and therefore invalid
+            return Value();
+
+        default:
+        //If we get here, this object was either a string or boolean and therefore invalid
+            return Value();
+    }
+}
 
 
 //division may occur only between ints and reals
 Value Value::operator/(const Value& op) const{
-switch(GetType()){
-        //If we have an int, we can add with either a real or an int
+    switch(GetType()){
+        //If we have an int, we can divide with either a real or an int
         case VINT:
             if(op.GetType() == VINT){
                 //we can have two ints, no casting needed
@@ -112,7 +149,7 @@ switch(GetType()){
             //If we get here, op was either a string or a float and therefore invalid
             return Value();
 
-        //If we have an int, we can add with either a real or an int
+        //If we have a real, we can divide with either a real or an int
         case VREAL:
             if(op.GetType() == VINT){
                 //cast to a float
@@ -134,28 +171,83 @@ switch(GetType()){
 }
 
 
+//Mod can only be performed on two ints, nothing else
+Value Value::operator%(const Value& oper) const{
+    //If both types are not int, this will not work
+    if(GetType() != VINT || oper.GetType() != VINT){
+        return Value();
+    }
+    //If we get here, we have two ints and this is valid
+    return(GetInt() % oper.GetInt());
+}
+
+
+
+//Performs numeric integer division on this by the operator
+// FIXME potentially here -> not entirely sure how this is supposed to work or how its different from idiv 
+Value Value::div(const Value& oper) const{
+    //We can only work with ints and reals, but everything must be cast to an int in the end
+    switch(GetType()){
+        case VINT:
+            if(oper.GetType() == VINT){
+                //we can have two ints, no casting needed
+                return Value(GetInt() / oper.GetInt());
+            }
+
+            if (oper.GetType() == VREAL){
+                //here we'll need to cast to an int
+                return Value(GetInt() / (int)oper.GetReal());
+            }
+            
+            //If we get here, op was either a string or a float and therefore invalid
+            return Value();
+
+        
+        case VREAL:
+            if(oper.GetType() == VINT){
+                //cast to an int
+                return Value((int)GetReal() / oper.GetInt());
+            }
+
+            if (oper.GetType() == VREAL){
+                //both need to be int casted
+                return Value((int)GetReal() / (int)oper.GetReal());
+            }
+            
+            //If we get here, op was either a string or a float and therefore invalid
+            return Value();
+
+        default:
+        //If we get here, this object was either a string or boolean and therefore invalid
+            return Value();
+    }
+}
+
+
 //Comparing "this" with op
 Value Value::operator==(const Value& op) const {
     //Check the cases for when types are equal first
     if (GetType() == op.GetType()){
-        if(IsInt()){
-            return Value(GetInt() == op.GetInt());
-        }    
+        switch(GetType()){
+            case VINT:
+                return Value(GetInt() == op.GetInt());
+            
+            case VREAL:
+                return Value(GetReal() == op.GetReal());
+            
+            case VSTRING:
+                return Value(GetString() == op.GetString());
 
-        if(IsReal()) {
-            return Value(GetReal() == op.GetReal());
-        }
+            case VBOOL:
+                return Value(GetBool() == op.GetBool());
 
-        if(IsString()){
-            return Value(GetString() == op.GetString());
-        }
-
-        if(IsBool()){
-            return Value(GetBool() == op.GetBool());
+            default:
+                //we should never get here in theory, added to avoid compile warnings on Vocareum
+                return Value();
         }
     }
-
-    //Just like the /operator, we can use casting to compare reals and ints
+    
+    //There are two special cases were we can mix ints and reals in either order
     if (IsReal() && op.IsInt()){
         //Cast op to be broader
         return Value(GetReal() == (float)op.GetInt());
@@ -170,6 +262,11 @@ Value Value::operator==(const Value& op) const {
     return Value();
 }
 
+//Comparing "this" with op, numeric types only for >
+Value Value::operator>(const Value& op) const{
+    // TODO
+}
+
 
 //This ANDing operator is only valid for two booleans
 Value Value::operator&&(const Value& oper) const{
@@ -180,16 +277,32 @@ Value Value::operator&&(const Value& oper) const{
 
     //If they are both booleans, simply use the boolean && operator
     return Value(GetBool() && oper.GetBool());
-
 }
 
 
-//Mod can only be performed on two ints, nothing else
-Value Value::operator%(const Value& oper) const{
-    //If both types are not int, this will not work
-    if(GetType() != VINT || oper.GetType() != VINT){
+//This ORing operator is only valid for two booleans
+Value Value::operator||(const Value& oper) const{
+    //If both types are not booleans, this will not work
+    if(GetType() != VBOOL || oper.GetType() != VBOOL){
         return Value();
     }
-    //If we get here, we have two ints and this is valid
-    return(GetInt() % oper.GetInt());
+
+    //If they are both booleans, simply use the boolean || operator
+    return Value(GetBool() || oper.GetBool());
 }
+
+
+//This copmlement operator is only valid for a boolean
+Value Value::operator!() const{
+    if(GetType() == VBOOL){
+        //Return the flipped boolean
+        return Value(!GetBool());
+    }
+
+    //If we end up here, we didn't have a boolean and therefore have an error
+    return Value();
+}
+
+
+
+
