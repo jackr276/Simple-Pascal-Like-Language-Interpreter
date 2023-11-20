@@ -1,0 +1,12 @@
+program circle;
+var
+	{Testing division by zero}
+	r, a, p, b : real; 
+	i, j : integer;	
+begin
+	p := 5.75;
+	i := 0;
+	b := p / i;
+	{Display the results}
+	writeln  'The output results are ' , r, p, b);
+end. 

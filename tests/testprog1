@@ -1,0 +1,15 @@
+program circle;
+{Undefined variable}
+var 
+	r, a, p, b : real; 
+	i, j : integer;
+begin
+	r := 8;
+	p := 0;
+	a := 0;
+	
+	if r > 5 then a := (3.14) * r * r;
+	if (a > 0) then p := 2 * 3.14 * b; 
+	{Display the results}
+	writeln ( 'The output results are ' , r, p, b);
+end. 

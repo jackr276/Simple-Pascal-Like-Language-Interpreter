@@ -1,0 +1,27 @@
+program circle;
+var
+	{Clean program testing if statement else-clause}
+	r, a, p, b : real; 
+	flag : boolean := true;
+	i, j : integer := 0;
+	str : string := 'End of Program';	
+begin
+	r := 8;
+	p := 0;
+	a := -1;
+	
+	if (a > 0 and a < 100) then
+	begin
+		b := 25;
+		p := 2 * 3.14 * b 
+	end
+	else
+	begin
+	    p := -1;
+	    flag := false
+	end;
+	{Display the results}
+	write ( 'The result of p = ' , p, ', ');
+	writeln('The result of flag = ' , flag);
+	writeln(str)
+end.

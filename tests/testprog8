@@ -1,0 +1,18 @@
+program circle;
+var
+	{Illegal operand types for a relational operator}
+	r, a, p, b : real; 
+	i, j : integer;	
+	bool1, bool2 : boolean := true;
+begin
+	r := 8;
+	p := 0;
+	a := 0;
+	j := -1;
+	if bool1 then
+	  a := (3.14) * r * r;
+	if (a < bool2) then
+	    p := 2 * 3.14 * b; 
+	{Display the results}
+	writeln  'The output results are ' , r, p, b);
+end  

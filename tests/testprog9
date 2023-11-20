@@ -1,0 +1,13 @@
+program circle;
+var
+	{Illegal operand type for MOD operator}
+	r, a, p, b : real; 
+	i, j : integer;	
+begin
+	r := 8;
+	p := 5.75;
+	i := 3;
+	b := p mod i; 
+	{Display the results}
+	writeln  'The output results are ' , r, p, b);
+end.

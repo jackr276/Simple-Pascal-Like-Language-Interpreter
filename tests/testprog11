@@ -1,0 +1,14 @@
+program circle;
+var
+	{Testing integer division (DIV) by zero}
+	r, b : real; 
+	i : integer:= 0 ;	
+begin
+	r := 5.75;
+		 
+	{Display the results}
+	
+	b := r div i;
+    writeln ( 'The output results are: ' , r, ', ', i);
+	writeln ( 'The output results are: ' , b)
+end.  

@@ -1,0 +1,15 @@
+program circle;
+var
+	{Tesing logic operations}
+	i, j : integer;	
+	bool1, bool2 : boolean ;
+begin
+	i := 9;
+	j := 2;
+	bool1 := true;
+	bool2:= false;
+	bool1 := bool2 or i > j and bool1;
+		
+	{Display the results}
+	writeln ( 'The output results are ' , bool2, ', ', bool1, ', ', i div j)
+end.  

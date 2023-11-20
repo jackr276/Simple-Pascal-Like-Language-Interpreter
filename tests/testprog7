@@ -1,0 +1,15 @@
+program circle;
+var
+	{Illegal operand types for a logic operator}
+	r, a, p, b : real; 
+	i, j : integer;	
+	bool1, bool2 : boolean := true;
+begin
+	i := 4;
+	j := 2;
+	a := 0;
+	bool1 := bool2 and i;
+		
+	{Display the results}
+	writeln ( 'The output results are ' , r, p, b);
+end.  

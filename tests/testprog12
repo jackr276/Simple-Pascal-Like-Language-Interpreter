@@ -1,0 +1,13 @@
+program circle;
+var
+	{Testing mixed-mode assignment}
+	r, b : real; 
+	i, j : integer:= 3 ;	
+begin
+	r := 8.75;
+	j := r;	 
+	{Display the results}
+	writeln ( 'The output results are: ' , r, ', ', i, ', ', j);
+	b := j mod i;
+	writeln ( 'The output results are: ' , b)
+end.  
