@@ -288,6 +288,8 @@ Value Value::operator>(const Value& op) const{
             //if we end up here, we have some noncompatible types
             return Value();
     }
+
+    return Value();
 }
 
 
@@ -317,6 +319,8 @@ Value Value::operator<(const Value& op) const{
             //if we end up here, we have some noncompatible types
             return Value();
     }
+
+    return Value();
 }
 
 

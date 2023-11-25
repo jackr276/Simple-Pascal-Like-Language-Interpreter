@@ -142,7 +142,6 @@ bool Prog(istream& in, int& line){
 */
 bool DeclPart(istream& in, int& line){
 	bool status = false;
-
 	LexItem l = Parser::GetNextToken(in, line);
 	//This first token should be VAR, if not throw an error
 	if (l != VAR){
@@ -197,6 +196,8 @@ bool DeclPart(istream& in, int& line){
 bool DeclStmt(istream& in, int& line){
 	//All of the variables in a declstmt are going to have the same type, store in a set for type assignment
 	set<string> tempSet;
+    //The token that may be used for type checking after the optional ASSOP
+    Token t;
 
 	//Dummy lexItem to make the first iteration of the while loop run
 	LexItem lookAhead = LexItem(COMMA, ",", 0);
@@ -251,6 +252,8 @@ bool DeclStmt(istream& in, int& line){
             //symtable keeps track of the type for all variables
 			SymTable[i] = l.GetToken();
 		}
+        //Save the token value for type checking
+        t = l.GetToken();
 	} else {
 		//Unrecognized type
 		ParseError(line, "Incorrect Declaration Type.");
@@ -264,11 +267,90 @@ bool DeclStmt(istream& in, int& line){
 
 	//If we find the optional ASSOP, process it
 	if (l == ASSOP){
-		bool status = Expr(in, line); // FIXME -- should pass in a reference to a value object
+        //This is the value reference that we will pass into our expr
+        Value val;
+		bool status = Expr(in, line, val);
+
+        //Throw an error if Expr fails
 		if (!status) {
 			ParseError(line, "Invalid expression following assignment operator.");
 			return false;
 		}
+
+        //If we get here, we need to do type checking and then assign every variable the value found by expr
+        switch(t){
+            case STRING:
+                //Types must match for this to work
+                if(val.GetType() == VSTRING){
+                    for(auto var : tempSet){
+                        //Everything in our declstmt will have the same type, so set it all to that type
+                        TempsResults[var] = val;
+                    }
+
+                } else {
+                    //Otherwise we fail here
+                    ParseError(line, "Illegal Assignment Operation");
+                    return false;
+                }
+
+            case BOOLEAN:
+                //Types also must match for booleans
+                if(val.GetType() == VBOOL){
+                    for(auto var : tempSet){
+                        TempsResults[var] = val;
+                    }
+
+                } else {
+                    ParseError(line, "Illegal Assignment Operation");
+                    return false;
+                }
+
+            case REAL:
+                //they match, nothing to do here
+                if(val.GetType() == VREAL){
+                    for(auto var : tempSet){
+                        TempsResults[var] = val;
+                    }
+
+                //here is the special case, cast to the type of the LHS(t in our case)
+                } else if(val.GetType() == VINT){
+                    val.SetReal((float)val.GetInt());
+                    val.SetType(VREAL);
+
+                    for(auto var : tempSet){
+                        TempsResults[var] = val;
+                    }
+
+                } else {
+                    ParseError(line, "Illegal Assignment Operation");
+                    return false;
+                }
+
+            case INTEGER:
+                //they match, nothing to do here
+                if(val.GetType() == VINT){
+                    for(auto var : tempSet){
+                        TempsResults[var] = val;
+                    }
+
+                //another special case here, cast to the LHS of INT in this case
+                } else if(val.GetType() == VREAL) {
+                    val.SetInt((int)val.GetReal());
+                    val.SetType(VINT);
+
+                    for(auto var : tempSet){
+                        TempsResults[var] = val;
+                    }
+                } else {
+                    ParseError(line, "Illegal Assignment Operation");
+                    return false;
+                }
+
+            default:
+                ParseError(line, "Illegal Assignment Operation");
+                return false;
+        }
+
 
 	//If its unrecognized throw and error
 	} else if (l == ERR){
