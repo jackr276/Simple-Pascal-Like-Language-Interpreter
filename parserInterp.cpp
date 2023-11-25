@@ -351,7 +351,6 @@ bool DeclStmt(istream& in, int& line){
                 return false;
         }
 
-
 	//If its unrecognized throw and error
 	} else if (l == ERR){
 		ParseError(line, "Unrecognized input pattern.");
@@ -366,3 +365,238 @@ bool DeclStmt(istream& in, int& line){
 	return true;
 }
 
+
+/** 
+ * Stmt is responsible for determining what kind of stmt we have and making appropriate calls
+* Grammar Rules
+* Stmt ::= SimpleStmt | StructuredStmtStmt
+* SimpleStmt ::= AssignStmt | WriteLnStmt | WriteStmt
+* StructuredStmt ::= IfStmt | CompoundStmt
+*/
+bool Stmt(istream& in, int& line) {
+	bool status;
+	// Get the next lexItem from the instream and analyze it
+	LexItem l = Parser::GetNextToken(in, line);
+
+	// If l is uncrecognizable, no use in checking anything
+	if (l == ERR){
+		ParseError(line, "Unrecognized input pattern.");
+		cout << "(" << l.GetLexeme() << ")";
+		return false;
+	}
+
+	// Check if we have a structured statement
+	if (l == BEGIN || l == IF){
+		//Put token back to be reprocessed
+		Parser::PushBackToken(l);
+		return StructuredStmt(in, line);
+	}
+
+	// Check to see if we have a simple statement
+	// Assignments start with IDENT
+	if (l == IDENT || l == WRITE || l == WRITELN){
+		//Put token back to be reprocessed
+		Parser::PushBackToken(l);
+		status = SimpleStmt(in, line);
+
+		if(!status){
+			ParseError(line, "Incorrect Simple Statement.");
+			return false;
+		}
+
+		return status;
+	}
+
+	//We didn't find anything so push the token back
+	Parser::PushBackToken(l);
+	//Stmt was not successful if we got here
+	return false;
+}
+
+
+/**
+* stmt will call StructuredStmt if appropriate according to our grammar rules
+* StructuredStmt ::= IfStmt | CompoundStmt
+*/
+bool StructuredStmt(istream& in, int& line){
+	bool status;
+	LexItem strd = Parser::GetNextToken(in, line);
+
+	switch (strd.GetToken()){
+		case IF:
+			status = IfStmt(in, line);
+			if (!status) {
+				ParseError(line, "Bad structured statement.");
+				return false;
+			}
+			return true;
+		//Compound statements begin with in
+		case BEGIN:
+			return CompoundStmt(in, line);
+
+		default:
+			//we won't ever get here, added to remove compile warnings
+			return false;
+	}
+}
+
+
+/**
+ * Compound statements start with BEGIN and stop with END
+ * CompoundStmt ::= BEGIN Stmt {; Stmt } END
+*/
+bool CompoundStmt(istream& in, int& line){
+	LexItem l;
+	LexItem lookAhead;
+	//If we got here we already have consumed a BEGIN
+	bool status = Stmt(in, line);
+
+    //keep calling stmt until we have a failure
+	while(status) {
+		l = Parser::GetNextToken(in, line);
+		if (l != SEMICOL && l != END){
+			ParseError(line, "Missing Semicolon in Compound statement.");
+			return false;
+		}
+
+		status = Stmt(in, line);
+	}
+
+	if (l == ERR) {
+		ParseError(line, "Unrecognized Input Pattern");
+		//print out the unrecognized input
+		cout << "(" << l.GetLexeme() << ")" << endl;
+		return false;
+	}
+
+
+	if (l != END) {
+		line++;
+		ParseError(line, "Missing END in compound statement.");
+		return false;
+	}
+
+	//If we make it to this point, we had valid expressions and saw END, so return true
+	return true;
+}
+
+
+/**
+* stmt will call SimpleStmt if appropriate according to our grammar rules
+* SimpleStmt ::= AssignStmt | WriteLnStmt | WriteStmt
+*/
+bool SimpleStmt(istream& in, int& line){
+	LexItem smpl = Parser::GetNextToken(in, line);
+
+	switch (smpl.GetToken()){
+		//Assignments start with identifiers
+		case IDENT:
+			Parser::PushBackToken(smpl);
+			return AssignStmt(in, line);
+
+		case WRITELN:
+			return WriteLnStmt(in, line);
+
+		case WRITE: 
+			return WriteStmt(in, line);
+		
+		//We won't ever get here, added for compile safety on Vocareum
+		default:
+			return false;
+	}
+}
+
+
+/**
+ * WriteLnStmt
+ * WriteLnStmt ::= writeln (ExprList)
+ * */ 
+bool WriteLnStmt(istream& in, int& line) {
+	LexItem t;
+
+    //A queue to be used to print out all of the values from exprList
+	ValQue = new queue<Value>;
+	
+    //Get the first token and ensure its an LPAREN
+	t = Parser::GetNextToken(in, line);
+	if( t != LPAREN ) {
+		ParseError(line, "Missing Left Parenthesis");
+		return false;
+	}
+	
+    //Call ExprList to populate the ValQueue using our pointer
+	bool ex = ExprList(in, line);
+	
+    //If ExprList fails we have an error
+	if( !ex ) {
+		ParseError(line, "Missing expression list for WriteLn statement");
+		return false;
+	}
+	
+    //finally check for the required RPAREN
+	t = Parser::GetNextToken(in, line);
+	if(t != RPAREN ) {
+		
+		ParseError(line, "Missing Right Parenthesis");
+		return false;
+	}
+	
+	//Evaluate: print out the list of expressions' values once all syntax works
+	while (!(*ValQue).empty())
+	{
+		Value nextVal = (*ValQue).front();
+		cout << nextVal;
+		ValQue->pop();
+	}
+    //Print the endl since this is a writeln statement
+	cout << endl;
+
+	return ex;
+}
+
+
+/**
+ * Write statements are the exact same as writelnstmt's, just without the added endl
+ * WriteStmt ::= write (ExprList)
+*/
+bool WriteStmt(istream& in, int& line){
+    //A queue to be used to print out all of the values from exprList
+	ValQue = new queue<Value>;
+
+	//Get the token after the word "write" and check if its an lparen
+	LexItem t = Parser::GetNextToken(in, line);
+
+	//No left parenthesis is an error, create error and exit
+	if (t != LPAREN) {
+		ParseError(line, "Missing Left Parenthesis");
+		return false;
+	}
+
+	//Generate the ExprList recursively
+	bool expr = ExprList(in, line);
+
+	//If no ExprList was gotten create a different error
+	if (!expr){
+		ParseError(line, "Missing expression list for Write statement");
+		return false;
+	}
+
+	//Check for a right parenthesis
+	t = Parser::GetNextToken(in, line);
+	
+    //If no RPAREN, syntax error
+	if (t != RPAREN) {
+		ParseError(line, "Missing right Parenthesis");
+		return false;
+	}
+
+    //Evaluate: print out the list of expressions' values once all syntax works
+	while (!(*ValQue).empty())
+	{
+		Value nextVal = (*ValQue).front();
+		cout << nextVal;
+		ValQue->pop();
+	}
+
+	return expr;
+}
