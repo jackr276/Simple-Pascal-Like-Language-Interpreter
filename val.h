@@ -32,7 +32,7 @@ public:
     
     ValType GetType() const { return T; }
     bool IsErr() const { return T == VERR; }
-     bool IsString() const { return T == VSTRING; }
+    bool IsString() const { return T == VSTRING; }
     bool IsReal() const {return T == VREAL;}
     bool IsBool() const {return T == VBOOL;}
     bool IsInt() const { return T == VINT; }

@@ -264,7 +264,100 @@ Value Value::operator==(const Value& op) const {
 
 //Comparing "this" with op, numeric types only for >
 Value Value::operator>(const Value& op) const{
-    // TODO
+    //We can only compare with ints and reals
+    switch (GetType()){
+        case VINT:
+            if(op.GetType() == VINT){
+                return Value(GetInt() > op.GetInt());
+            }
+
+            if (op.GetType() == VREAL){
+                return Value((float)GetInt() > op.GetReal());
+            }
+
+        case VREAL:
+            if(op.GetType() == VINT){
+                return Value(GetReal() > (float)op.GetInt());
+            }
+
+            if(op.GetType() == VREAL){
+                return Value(GetReal() > op.GetReal());
+            }
+                
+        default:
+            //if we end up here, we have some noncompatible types
+            return Value();
+    }
+}
+
+
+//Comparing "this" with op, numeric types only for <
+Value Value::operator<(const Value& op) const{
+    //We can only compare with ints and reals
+    switch (GetType()){
+        case VINT:
+            if(op.GetType() == VINT){
+                return Value(GetInt() < op.GetInt());
+            }
+
+            if (op.GetType() == VREAL){
+                return Value((float)GetInt() < op.GetReal());
+            }
+
+        case VREAL:
+            if(op.GetType() == VINT){
+                return Value(GetReal() < (float)op.GetInt());
+            }
+
+            if(op.GetType() == VREAL){
+                return Value(GetReal() < op.GetReal());
+            }
+        
+        default:
+            //if we end up here, we have some noncompatible types
+            return Value();
+    }
+}
+
+
+//Performs numeric integer division on this by the operator
+// FIXME potentially here -> not entirely sure how this is supposed to work or how its different from idiv 
+Value Value::idiv(const Value& op) const{
+    //We can only work with ints and reals, but everything must be cast to an int in the end
+    switch(GetType()){
+        case VINT:
+            if(op.GetType() == VINT){
+                //we can have two ints, no casting needed
+                return Value(GetInt() / op.GetInt());
+            }
+
+            if (op.GetType() == VREAL){
+                //here we'll need to cast to an int
+                return Value(GetInt() / (int)op.GetReal());
+            }
+            
+            //If we get here, op was either a string or a float and therefore invalid
+            return Value();
+
+        
+        case VREAL:
+            if(op.GetType() == VINT){
+                //cast to an int
+                return Value((int)GetReal() / op.GetInt());
+            }
+
+            if (op.GetType() == VREAL){
+                //both need to be int casted
+                return Value((int)GetReal() / (int)op.GetReal());
+            }
+            
+            //If we get here, op was either a string or a float and therefore invalid
+            return Value();
+
+        default:
+        //If we get here, this object was either a string or boolean and therefore invalid
+            return Value();
+    }
 }
 
 
