@@ -26,9 +26,6 @@ Value Value::operator+(const Value& op) const{
                 return Value((float)GetInt() + op.GetReal());
             }
             
-            //If we get here, op was either a string or a float and therefore invalid
-            return Value();
-
         //If we have a real, we can add with either a real or an int
         case VREAL:
             if(op.GetType() == VINT){
@@ -40,14 +37,14 @@ Value Value::operator+(const Value& op) const{
                 //no need for casting here
                 return Value(GetReal() + op.GetReal());
             }
-            
-            //If we get here, op was either a string or a float and therefore invalid
-            return Value();
 
         default:
         //If we get here, this object was either a string or boolean and therefore invalid
             return Value();
     }
+
+    //If we get here, op was either a string or a float and therefore invalid
+    return Value();
 }
 
 
@@ -66,9 +63,6 @@ Value Value::operator-(const Value& op) const{
                 return Value((float)GetInt() - op.GetReal());
             }
             
-            //If we get here, op was either a string or a float and therefore invalid
-            return Value();
-
         //If we have a real, we can subtract with either a real or an int
         case VREAL:
             if(op.GetType() == VINT){
@@ -80,14 +74,14 @@ Value Value::operator-(const Value& op) const{
                 //no need for casting here
                 return Value(GetReal() - op.GetReal());
             }
-            
-            //If we get here, op was either a string or a float and therefore invalid
-            return Value();
 
         default:
         //If we get here, this object was either a string or boolean and therefore invalid
             return Value();
     }
+                
+    //If we get here, op was either a string or a float and therefore invalid
+    return Value();
 }
 
 
@@ -106,9 +100,6 @@ Value Value::operator*(const Value& op) const{
                 return Value((float)GetInt() * op.GetReal());
             }
             
-            //If we get here, op was either a string or a float and therefore invalid
-            return Value();
-
         //If we have a real, we can multiply with either a real or an int
         case VREAL:
             if(op.GetType() == VINT){
@@ -120,14 +111,14 @@ Value Value::operator*(const Value& op) const{
                 //no need for casting here
                 return Value(GetReal() * op.GetReal());
             }
-            
-            //If we get here, op was either a string or a float and therefore invalid
-            return Value();
 
         default:
         //If we get here, this object was either a string or boolean and therefore invalid
             return Value();
     }
+    
+    //If we get here, op was either a string or a boolean and therefore invalid
+    return Value();
 }
 
 
@@ -145,9 +136,6 @@ Value Value::operator/(const Value& op) const{
                 //here we'll need to cast to the broader type
                 return Value((float)GetInt() / op.GetReal());
             }
-            
-            //If we get here, op was either a string or a float and therefore invalid
-            return Value();
 
         //If we have a real, we can divide with either a real or an int
         case VREAL:
@@ -160,14 +148,14 @@ Value Value::operator/(const Value& op) const{
                 //no need for casting here
                 return Value(GetReal() / op.GetReal());
             }
-            
-            //If we get here, op was either a string or a float and therefore invalid
-            return Value();
 
         default:
         //If we get here, this object was either a string or boolean and therefore invalid
             return Value();
     }
+        
+    //If we get here, op was either a string or a boolean and therefore invalid
+    return Value();
 }
 
 
@@ -180,7 +168,6 @@ Value Value::operator%(const Value& oper) const{
     //If we get here, we have two ints and this is valid
     return(GetInt() % oper.GetInt());
 }
-
 
 
 //Performs numeric integer division on this by the operator
@@ -198,10 +185,6 @@ Value Value::div(const Value& oper) const{
                 //here we'll need to cast to an int
                 return Value(GetInt() / (int)oper.GetReal());
             }
-            
-            //If we get here, op was either a string or a float and therefore invalid
-            return Value();
-
         
         case VREAL:
             if(oper.GetType() == VINT){
@@ -213,14 +196,14 @@ Value Value::div(const Value& oper) const{
                 //both need to be int casted
                 return Value((int)GetReal() / (int)oper.GetReal());
             }
-            
-            //If we get here, op was either a string or a float and therefore invalid
-            return Value();
 
         default:
         //If we get here, this object was either a string or boolean and therefore invalid
             return Value();
     }
+                
+    //If we get here, op was either a string or a boolean and therefore invalid
+    return Value();
 }
 
 
@@ -262,6 +245,7 @@ Value Value::operator==(const Value& op) const {
     return Value();
 }
 
+
 //Comparing "this" with op, numeric types only for >
 Value Value::operator>(const Value& op) const{
     //We can only compare with ints and reals
@@ -285,10 +269,11 @@ Value Value::operator>(const Value& op) const{
             }
                 
         default:
-            //if we end up here, we have some noncompatible types
+            //if we end up here, we have either a boolean or a string
             return Value();
     }
 
+    //If we got here, we had either a boolean or a string
     return Value();
 }
 
@@ -320,6 +305,7 @@ Value Value::operator<(const Value& op) const{
             return Value();
     }
 
+    //If we got here, we had either a boolean or a string
     return Value();
 }
 
@@ -339,10 +325,6 @@ Value Value::idiv(const Value& op) const{
                 //here we'll need to cast to an int
                 return Value(GetInt() / (int)op.GetReal());
             }
-            
-            //If we get here, op was either a string or a float and therefore invalid
-            return Value();
-
         
         case VREAL:
             if(op.GetType() == VINT){
@@ -354,14 +336,14 @@ Value Value::idiv(const Value& op) const{
                 //both need to be int casted
                 return Value((int)GetReal() / (int)op.GetReal());
             }
-            
-            //If we get here, op was either a string or a float and therefore invalid
-            return Value();
 
         default:
         //If we get here, this object was either a string or boolean and therefore invalid
             return Value();
     }
+        
+    //If we get here, op was either a string or a float and therefore invalid
+    return Value();
 }
 
 
@@ -399,7 +381,3 @@ Value Value::operator!() const{
     //If we end up here, we didn't have a boolean and therefore have an error
     return Value();
 }
-
-
-
-
