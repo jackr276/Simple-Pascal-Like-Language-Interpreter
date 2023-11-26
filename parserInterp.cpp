@@ -600,3 +600,116 @@ bool WriteStmt(istream& in, int& line){
 
 	return expr;
 }
+
+
+// Processing all IF statements, 
+// IfStmt ::= IF Expr THEN Stmt [ ELSE Stmt ]
+bool IfStmt(istream& in, int& line){
+	LexItem l;
+	//The val value to be used with Expr
+	Value val;
+
+	//Once this function is called, the IF token has been consumed already
+	//We should see a valid expression at this point
+	bool status = Expr(in, line, val);
+
+	//if expression is not valid, throw an error
+	if(!status){
+		ParseError(line, "Invalid expression in IF statement.");
+		return false;
+	}
+
+	//If val is not a boolean, that's an error
+	if(val.GetType() != VBOOL){
+		ParseError(line, "Expression in IF Statement must be of type Boolean");
+		return false;
+	}
+
+	//if we get here, then we had a valid expression. Next token must be THEN
+	l = Parser::GetNextToken(in, line);
+
+	//If its unknown, throw error
+	if (l == ERR ){
+		ParseError(line, "Unrecognized Input Pattern");
+		cout << "(" << l.GetToken() << ")" << endl;
+		return false;
+	}
+
+	//If its not a THEN, we have an error
+	if (l != THEN) {
+		ParseError(line, "Missing THEN in IF statement.");
+		return false;
+	}
+
+	//Once we're here we know we have ::= IF expr = true THEN stmt 
+	
+	//If val is true, execute the stmt and return
+	if (val.GetBool() == true){
+		//Exceute the stmt
+		status = Stmt(in, line);
+		
+		//Potential for a bad stmt here
+		if(!status){
+			ParseError(line, "Bad Statement in IF Statement");
+			return false;
+		}
+
+		//we also need to "skip over" the entire else statement if this is the case
+		l = Parser::GetNextToken(in, line);
+		
+		//Skip over until l is a semicol
+		while(l != SEMICOL) {
+			//Catch any errors we might see while we're at it
+			if (l == ERR){
+				ParseError(line, "Unrecognized Input Pattern");
+				cout << "(" << l.GetToken() << ")" << endl;
+				return false;
+			}
+
+			l = Parser::GetNextToken(in, line);
+		}
+		
+		//We will have consumed one extra token by here, so return it
+		Parser::PushBackToken(l);
+
+	} else {
+		//If we get here the val was false, so there are 2 options based on whether or not there is an ELSE
+		l = Parser::GetNextToken(in, line);
+
+		//We want to skip over the statement after then, as it is not being executed
+		while(l != SEMICOL && l != ELSE){
+			//Catch any errors we might see while we're at it
+			if (l == ERR){
+				ParseError(line, "Unrecognized Input Pattern");
+				cout << "(" << l.GetToken() << ")" << endl;
+				return false;
+			}
+
+			l = Parser::GetNextToken(in, line);
+		}
+
+		//If we get here, we know l is either a SEMICOL or an ELSE
+		
+		//If we just have a semicol, return and be done
+		if(l == SEMICOL) {
+			//put the semicol back, it's not this function's job to procees it
+			Parser::PushBackToken(l);
+			return true;
+		} 
+
+		//otherwise if we have an else stmt, keep the token and process the stmt
+		if (l == ELSE){
+			//Execute the else stmt
+			status = Stmt(in, line);
+
+			//If it fails return false
+			if(!status){
+				ParseError(line, "Invalid stmt in IF-ELSE stmt");
+				return false;
+			}
+		}
+	}
+
+	//If we make it here, everything worked
+	return true;
+}
