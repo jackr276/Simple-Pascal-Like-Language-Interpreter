@@ -713,3 +713,146 @@ bool IfStmt(istream& in, int& line){
 	//If we make it here, everything worked
 	return true;
 }
+
+
+/**
+ * Assignment Statements take in a var, ASSOP and expression
+ * AssignStmt ::= Var := Expr
+*/
+bool AssignStmt(istream& in, int& line){
+	bool status = false;
+	bool varStatus = false;
+	LexItem l;
+	//This will be used for finding types from var
+	LexItem idtok;
+	//This will be used for Expr
+	Value val;
+
+	//Check to see the status of the identifier that we have(was it already declared?)
+	varStatus = Var(in, line, idtok);
+
+	//If the variable wasn't correct, we essentially have no variable
+	if(!varStatus){
+		ParseError(line, "Missing Left-Hand Side Variable in Assignment statement");
+		return false;
+	}
+
+	//If we get here, we know we have a valid Var
+	//Get the next token(should be assop)
+	l = Parser::GetNextToken(in, line);
+
+	//If we have an error token, throw error and exit
+	if (l == ERR){
+		ParseError(line, "Unrecognized Input Pattern");
+		//print out the unrecognized input
+		cout << "(" << l.GetLexeme() << ")" << endl;
+		return false;
+	}
+
+	//If we don't have an assop here, no reason in continuing
+	if (l != ASSOP){
+		ParseError(line, "Missing Assignment Operator in AssignStmt");
+		return false;
+	}
+
+	//Once we're here, we know we have Valid Var :=, now analyze the expr
+	status = Expr(in, line, val);
+
+	//If there's no expression, thats an error
+	if (!status){
+		ParseError(line, "Missing Expression in Assignment Statement");
+		return false;
+	}
+
+	//Once we're here, we know we have Var := Expr, but we don't know if our types match, so do type checking
+
+	//using our idtok, which has the variable name as its lexeme
+	string var = idtok.GetLexeme();
+
+	//right now, idtok is holding the type of the valid variable, and val is holding the the value gotten from some valid expr
+	switch(idtok.GetToken()){
+		case STRING:
+			//Types must match for this to work
+			if(val.GetType() == VSTRING){
+				TempsResults[var] = val;
+				return true;
+			}
+
+		case BOOLEAN:
+			//Types also must match for booleans
+			if(val.GetType() == VBOOL){
+				TempsResults[var] = val;
+				return true;
+			}
+
+		case REAL:
+			//they match, nothing to do here
+			if(val.GetType() == VREAL){
+				TempsResults[var] = val;
+				return true;
+			} 
+			
+			//here is the special case, cast to the type of the LHS(t in our case)
+			if(val.GetType() == VINT){
+				val.SetReal((float)val.GetInt());
+				val.SetType(VREAL);
+
+				TempsResults[var] = val;
+				return true;
+			}
+
+		case INTEGER:
+			//they match, nothing to do here
+			if(val.GetType() == VINT){
+				TempsResults[var] = val;
+				return true;
+			} 
+		
+			//another special case here, cast to the LHS of INT in this case
+			if(val.GetType() == VREAL) {
+				val.SetInt((int)val.GetReal());
+				val.SetType(VINT);
+
+				TempsResults[var] = val;
+				return true;
+			}
+
+		//We should never get here in theory, added to remove compile warnings
+		default:
+			ParseError(line, "Illegal Assignment Operation");
+			return false;
+	}
+
+	//if we get here, we know there must have been some mismatched types
+	ParseError(line, "Mismatched types in assignment operation");
+	return false;
+}
+
+
+// Check to see if the variable is valid and has previously been declared
+// Var ::= IDENT
+bool Var(istream& in, int& line, LexItem& idtok){
+	//get the token, check to see if var was declared
+	LexItem l = Parser::GetNextToken(in, line);
+
+	//If we can find the variable, return true
+	if(defVar.find(l.GetLexeme())-> second){
+		//Use idtok to conveniently store the type of the variable using symTable
+		idtok = LexItem(SymTable[l.GetLexeme()], l.GetLexeme(), line);
+		return true;
+
+	//If lexeme is unrecognized, then give this error
+	} else if (l == ERR) {
+		ParseError(line, "Unrecognized Input Pattern");
+		cout << "(" << l.GetToken() << ")" << endl;
+		return false;
+
+	//If we get here, we have a valid variable name that was just not declared. Show appropriate error
+	} else {
+		ParseError(line, "Undeclared Variable");
+		return false;
+	}
+
+	//We should never get here, added to remove compile warnings
+	return false;
+}
