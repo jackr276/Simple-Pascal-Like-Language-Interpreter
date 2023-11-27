@@ -1008,3 +1008,68 @@ bool LogANDExpr(istream& in, int& line, Value& retVal){
 	return status;
 }
 
+
+// RelExpr ::= SimpleExpr [ ( = | < | > ) SimpleExpr ]
+bool RelExpr(istream& in, int& line, Value& retVal){
+	bool status;
+	LexItem l;
+
+	//We should first see a valid SimpleExpr
+	status = SimpleExpr(in, line, retVal);
+
+	if (!status) {
+		ParseError(line, "Invalid Simple Expression in Relational Expression");
+		return false;
+	}
+
+	//If we get here we can optionally see =, < or > once
+	l = Parser::GetNextToken(in, line);
+
+	//If it is one of these, check for the validity of the simpleExpr
+	if (l == EQ || l == GTHAN || l == LTHAN) {
+		Value val;
+		//Process the simpleExpr following this
+		status = SimpleExpr(in, line, val);
+
+		//Throw error if bad
+		if(!status) {
+			ParseError(line, "Invalid Simple Expression in Relational Expression.");
+			return false;
+		}
+
+		//Now we need to perform the operation, making use of our overloaded operators
+		switch(l.GetToken()){
+			case EQ:
+				retVal = retVal == val;
+
+			case GTHAN:
+				retVal = retVal > val;
+
+			case LTHAN:
+				retVal = retVal < val;
+			
+			//We won't ever get here, added to remove compile warnings
+			default:
+				return false;
+		}
+
+		//If we have an error here, retVal or Val were non-boolean, and the relational operation failed
+		if (retVal.IsErr()){
+			ParseError(line, "Illegal use of non-boolean operand with relational operators");
+			return false;
+		}
+	}
+
+	//If lexeme is unknown, throw error
+	if (l == ERR) {
+		ParseError(line, "Unrecognized input pattern.");
+		cout << "(" << l.GetLexeme() << ")";
+		return false;
+	}
+
+	//If we didn't have =, < or > or ERR, push token back and return status
+	Parser::PushBackToken(l);
+
+	//If we end up here, all went well
+	return true;
+}
