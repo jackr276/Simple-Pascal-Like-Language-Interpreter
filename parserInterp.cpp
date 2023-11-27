@@ -281,7 +281,7 @@ bool DeclStmt(istream& in, int& line){
         switch(t){
             case STRING:
                 //Types must match for this to work
-                if(val.GetType() == VSTRING){
+                if(val.IsString()){
                     for(auto var : tempSet){
                         //Everything in our declstmt will have the same type, so set it all to that type
                         TempsResults[var] = val;
@@ -295,7 +295,7 @@ bool DeclStmt(istream& in, int& line){
 
             case BOOLEAN:
                 //Types also must match for booleans
-                if(val.GetType() == VBOOL){
+                if(val.IsBool()){
                     for(auto var : tempSet){
                         TempsResults[var] = val;
                     }
@@ -307,13 +307,13 @@ bool DeclStmt(istream& in, int& line){
 
             case REAL:
                 //they match, nothing to do here
-                if(val.GetType() == VREAL){
+                if(val.IsReal()){
                     for(auto var : tempSet){
                         TempsResults[var] = val;
                     }
 
                 //here is the special case, cast to the type of the LHS(t in our case)
-                } else if(val.GetType() == VINT){
+                } else if(val.IsInt()){
                     val.SetReal((float)val.GetInt());
                     val.SetType(VREAL);
 
@@ -328,13 +328,13 @@ bool DeclStmt(istream& in, int& line){
 
             case INTEGER:
                 //they match, nothing to do here
-                if(val.GetType() == VINT){
+                if(val.IsInt()){
                     for(auto var : tempSet){
                         TempsResults[var] = val;
                     }
 
                 //another special case here, cast to the LHS of INT in this case
-                } else if(val.GetType() == VREAL) {
+                } else if(val.IsReal()) {
                     val.SetInt((int)val.GetReal());
                     val.SetType(VINT);
 
@@ -773,27 +773,27 @@ bool AssignStmt(istream& in, int& line){
 	switch(idtok.GetToken()){
 		case STRING:
 			//Types must match for this to work
-			if(val.GetType() == VSTRING){
+			if(val.IsString()){
 				TempsResults[var] = val;
 				return true;
 			}
 
 		case BOOLEAN:
 			//Types also must match for booleans
-			if(val.GetType() == VBOOL){
+			if(val.IsBool()){
 				TempsResults[var] = val;
 				return true;
 			}
 
 		case REAL:
 			//they match, nothing to do here
-			if(val.GetType() == VREAL){
+			if(val.IsReal()){
 				TempsResults[var] = val;
 				return true;
 			} 
 			
 			//here is the special case, cast to the type of the LHS(t in our case)
-			if(val.GetType() == VINT){
+			if(val.IsInt()){
 				val.SetReal((float)val.GetInt());
 				val.SetType(VREAL);
 
@@ -803,13 +803,13 @@ bool AssignStmt(istream& in, int& line){
 
 		case INTEGER:
 			//they match, nothing to do here
-			if(val.GetType() == VINT){
+			if(val.IsInt()){
 				TempsResults[var] = val;
 				return true;
 			} 
 		
 			//another special case here, cast to the LHS of INT in this case
-			if(val.GetType() == VREAL) {
+			if(val.IsReal()) {
 				val.SetInt((int)val.GetReal());
 				val.SetType(VINT);
 
@@ -895,3 +895,59 @@ bool ExprList(istream& in, int& line) {
 	return status;
 }
 
+
+//Expr ::= LogOrExpr ::= LogAndExpr { OR LogAndExpr }
+//So essentially: Expr ::= LogANDExpr { OR LogAndExpr}
+bool Expr(istream& in, int& line, Value& retVal){
+	bool status = false;
+	LexItem l;
+	
+	//Once we get here, first thing to do is call LogAndExpr
+	status = LogANDExpr(in, line, retVal);
+	//If this is all that we have, it doesn't matter the type of retVal
+
+	//If expression is bad, return false
+	if (!status){
+		return false; // FIXME potentially may want to have an error here
+	}
+
+	//Once we're here, we can either have nothing or one or more OR's followed by more LogAndExpr
+	//Get the next token
+	l = Parser::GetNextToken(in, line);
+
+	//While we have an OR, keep processing LogAndExpr's
+	while (l == OR){
+		Value val;
+		status = LogANDExpr(in, line, val);
+
+		//If expression is bad, return error
+		if (!status){
+			return false; //FIXME potentially may want to throw an error here
+		}
+
+		//perform the "OR"ing for retval and val and reassign it to retVal
+		retVal = retVal || val;
+
+		//If this doesn't work, we had a bad or operation(i.e. we either val or retval isn't a boolean)
+		if(retVal.IsErr()){
+			ParseError(line, "Illegal use of non-boolean operator with OR");
+			return false;
+		}
+
+		//refresh the value of l
+		l = Parser::GetNextToken(in, line);
+	}
+
+	// if we have an ERR token, throw error
+	if (l == ERR) {
+		ParseError(line, "Unrecognized input pattern.");
+		cout << "(" << l.GetLexeme() << ")";
+		return false;
+	}
+
+	//Once we get here, l was not an OR, so put it back and we're done
+	Parser::PushBackToken(l);
+
+	//If we end up here, everything worked
+	return true;
+}
