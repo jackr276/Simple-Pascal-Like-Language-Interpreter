@@ -930,7 +930,7 @@ bool Expr(istream& in, int& line, Value& retVal){
 
 		//If this doesn't work, we had a bad or operation(i.e. we either val or retval isn't a boolean)
 		if(retVal.IsErr()){
-			ParseError(line, "Illegal use of non-boolean operator with OR");
+			ParseError(line, "Illegal use of non-boolean operand with OR");
 			return false;
 		}
 
@@ -951,3 +951,60 @@ bool Expr(istream& in, int& line, Value& retVal){
 	//If we end up here, everything worked
 	return true;
 }
+
+
+// LogAndExpr ::= RelExpr {AND RelExpr }
+bool LogANDExpr(istream& in, int& line, Value& retVal){
+	bool status = false;
+	LexItem l;
+
+	//Once we get here, the first thing we should do is check for a relational expression
+	status = RelExpr(in, line, retVal);
+	//If we there are no AND operations, it's fine if retVal isn't a boolean
+
+	//If we have a bad relational expression, return error
+	if (!status){
+		//ParseError(line, "Syntactic error in relational expression.");
+		return false;
+	}
+
+	//Good first expression, check to see if we have an AND token
+	l = Parser::GetNextToken(in, line);
+
+	//So long as we keep seeing AND, keep processing tokens
+	while (l == AND){
+		Value val;
+		//Check the next relational expression
+		status = RelExpr(in, line, val);
+
+		//If its a bad expression, throw an error and stop
+		if (!status){
+			return false; //FIXME potentially want to throw error here
+		}
+
+		//Perform the "AND"ing between retVal and Val
+		retVal = retVal && val;
+
+		//If retVal happens to be an error, that means we had a non-boolean operand somewhere
+		if (retVal.IsErr()){
+			ParseError(line, "Illegal use of a non-boolean operand with AND");
+			return false;
+		}
+
+		//Refresh the value of l
+		l = Parser::GetNextToken(in, line);
+	}
+
+	//If we got here, we know l wasn't AND, check if it is ERR
+	if (l == ERR) {
+		ParseError(line, "Unrecognized input pattern.");
+		cout << "(" << l.GetLexeme() << ")";
+		return false;
+	}
+	
+	//If we get here, l wasn't AND or an ERR, so push it back to the stream
+	Parser::PushBackToken(l);
+
+	return status;
+}
+
