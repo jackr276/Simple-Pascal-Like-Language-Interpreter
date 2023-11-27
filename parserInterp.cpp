@@ -856,3 +856,42 @@ bool Var(istream& in, int& line, LexItem& idtok){
 	//We should never get here, added to remove compile warnings
 	return false;
 }
+
+
+//Simply calls expr recursively, so long as there are more commas. This will be used in our writeln
+//ExprList:= Expr {,Expr}
+bool ExprList(istream& in, int& line) {
+	bool status = false;
+	Value retVal;
+
+	//Call expr, passing in retVal so we can have a result
+	status = Expr(in, line, retVal);
+
+	//If expr is bad, no point in continuing
+	if(!status){
+		ParseError(line, "Missing Expression");
+		return false;
+	}
+
+	//Push the value to the queue of values to be printed
+	ValQue->push(retVal);
+
+	//get and analyze next token, if it is a comma we should recursively call this function again
+	LexItem tok = Parser::GetNextToken(in, line);
+	
+	if (tok == COMMA) {
+		status = ExprList(in, line);
+
+	} else if(tok.GetToken() == ERR){
+		ParseError(line, "Unrecognized Input Pattern");
+		cout << "(" << tok.GetLexeme() << ")" << endl;
+		return false;
+
+	} else {
+		Parser::PushBackToken(tok);
+		return true;
+	}
+
+	return status;
+}
+
