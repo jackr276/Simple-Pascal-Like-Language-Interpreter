@@ -1,6 +1,7 @@
 /**
  * Jack Robbins
  * Recursive-Descent Parser and Interpreter for a Pascal-Like language
+ * See README for full details
 */
 
 #include "parserInterp.h"
@@ -676,7 +677,7 @@ bool IfStmt(istream& in, int& line){
 		//we also need to "skip over" the entire else statement if this is the case
 		l = Parser::GetNextToken(in, line);
 		
-		//Skip over until l is a semicol //This does not work
+		//Skip over until l is a semicol
 		while(l != SEMICOL) {
 			//Catch any errors we might see while we're at it
 			if (l == ERR){
@@ -947,7 +948,7 @@ bool Expr(istream& in, int& line, Value& retVal){
 
 	//If expression is bad, return false
 	if (!status){
-		return false; // FIXME potentially may want to have an error here
+		return false;
 	}
 
 	//Once we're here, we can either have nothing or one or more OR's followed by more LogAndExpr
@@ -961,7 +962,7 @@ bool Expr(istream& in, int& line, Value& retVal){
 
 		//If expression is bad, return error
 		if (!status){
-			return false; //FIXME potentially may want to throw an error here
+			return false;
 		}
 
 		//perform the "OR"ing for retval and val and reassign it to retVal
@@ -1018,7 +1019,7 @@ bool LogANDExpr(istream& in, int& line, Value& retVal){
 
 		//If its a bad expression, throw an error and stop
 		if (!status){
-			return false; //FIXME potentially want to throw error here
+			return false;
 		}
 
 		//Perform the "AND"ing between retVal and Val
@@ -1127,7 +1128,7 @@ bool SimpleExpr(istream& in, int& line, Value& retVal){
 
 	//Throw error if invalid
 	if(!status){
-		return false; //FIXME potentiall want an error here
+		return false;
 	}
 
 	//once we're here, we can see 0 or many + and -
