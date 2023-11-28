@@ -1212,3 +1212,172 @@ bool Term(istream& in, int& line, Value& retVal){
 }
 
 
+// SFactor can have an optional sign in front of it
+// SFactor ::= [( - | + | NOT )] Factor
+bool SFactor(istream& in, int& line, Value& retVal){
+	
+	//Get the token for processing
+	LexItem l = Parser::GetNextToken(in, line); 
+
+	//Plus is a "1" in factor
+	if (l == PLUS){
+		return Factor(in, line, retVal, 1);
+	}
+
+	//Negative is a "2" in factor
+	if (l == MINUS) {
+		return Factor(in, line, retVal, 2);
+	}
+
+	//NOT is a "3" in factor
+	if (l == NOT) {
+		return Factor(in, line, retVal, 3);
+	}
+
+	//If l is not +, - or NOT, push token back and let factor handle it
+	Parser::PushBackToken(l);
+	
+	//0 means we found no plus, minus or NOT
+	return Factor(in, line, retVal, 0);
+}
+
+
+//Factor must be a predeclared identifier or a constant, or an optional expr in parenthesis
+//Sign is 0 if no sign, 1 if positive(+), 2 if negative(-), 3 if NOT
+//Factor ::= IDENT | ICONST | RCONST | SCONST | BCONST | (Expr)
+bool Factor(istream& in, int& line, Value& retVal, int sign){
+	bool status;
+	//get and check our first token
+	LexItem l = Parser::GetNextToken(in, line);
+
+	//If the token is an error, no use in further processing
+	if (l == ERR){
+		ParseError(line, "Unrecognized input pattern.");
+		cout << "(" << l.GetLexeme() << ")";
+		return false;
+	}
+
+	//If we have an identifier, we want retVal to be whatever stored value it has from tempsResults
+	if (l == IDENT){
+		//Idents should not have a sign at all
+		if (sign != 0){
+			ParseError(line, "Illegal use of a sign before an identifier.");
+			return false;
+		}
+		
+		//If we get here, ident was fine, push back and let Var handle it
+		Parser::PushBackToken(l);
+
+		//This will be used for getting the type
+		LexItem idTok;
+
+		//Let's see if Var is valid
+		status = Var(in, line, idTok);
+
+		//If we get here, var was undeclared
+		if(!status){
+			return false;
+		}
+
+		//Otherwise, make retVal the stored value of the Var using idTok
+		retVal = TempsResults[idTok.GetLexeme()];
+	}
+
+	//Check SCONST
+	if (l == SCONST){
+		//SCONSTS should also have no sign
+		if (sign != 0){
+			ParseError(line, "Illegal use of a sign before a string constant.");
+			return false;
+		}
+
+		//if we pass this condition then its true, return a value with the SCONST
+		retVal = Value(l.GetLexeme());
+	}
+
+	//Check RCONST and ICONST
+	if (l == ICONST || l == RCONST){
+		//Reals and ints can have +/- sign, or no sign, just not "NOT"
+		if(sign == 3){
+			ParseError(line, "Illegal use of NOT operator before integer or real constant.");
+			return false;
+		}
+
+		//construct the appropriate value, no sign and a positive sign have same meaning
+		if(sign == 0 || sign == 1){
+			if(l == ICONST){
+				retVal = Value(stoi(l.GetLexeme()));
+			}
+
+			if (l == RCONST){
+				retVal = Value(stof(l.GetLexeme()));
+			}
+		}
+
+		if(sign == 2){
+			//To be used for multiplying
+			Value val = Value(-1);
+
+			if(l == ICONST){
+				retVal = val * Value(stoi(l.GetLexeme()));
+			}
+
+			if (l == RCONST){
+				retVal = val * Value(stof(l.GetLexeme()));
+			}
+		}
+	}
+	
+
+	//Check BCONST
+	if (l == BCONST){
+		//Booleans can have the NOT or no operator, but nothing else
+		if (sign == 1 || sign == 2){
+			ParseError(line, "Illegal use of +/- sign before boolean constant.");
+			return false;
+		}
+
+		//Used for storing our bools
+		bool result = false;
+
+		if(l.GetLexeme() == "true"){
+			result = true;
+		}
+
+		//No sign, simply return boolean
+		if(sign == 0){
+			retVal = Value(result);
+		}
+
+		if (sign == 3){
+			retVal = !Value(result);
+		}
+	}
+
+	//If we see an lparen, we have an expr
+	if (l == LPAREN){
+		//Evaluate the internal expression
+		status = Expr(in, line, retVal);
+
+		if(!status){
+			ParseError(line, "Invalid Expression.");
+			return false;
+		}
+
+		//Ensure that there is a closing rparen
+		l = Parser::GetNextToken(in, line);
+		if (l != RPAREN){
+			ParseError(line, "Missing Right Parenthesis");
+			return false;
+		}
+	}
+
+	//Double check, if retVal is error, error should be returned
+	if(retVal.IsErr()){
+		ParseError(line, "Illegal Factor");
+		return false;
+	}
+
+	//If we get here, all went well
+	return true;
+}
