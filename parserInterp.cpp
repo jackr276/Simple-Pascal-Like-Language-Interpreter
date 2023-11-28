@@ -712,6 +712,14 @@ bool IfStmt(istream& in, int& line){
 				return false;
 			}
 
+			//we are in a compound statement, skip until we see end
+			if (l == BEGIN){
+				LexItem cs;
+				while(cs != END){
+					cs = Parser::GetNextToken(in, line);
+				}
+			}
+
 			l = Parser::GetNextToken(in, line);
 		}
 
@@ -728,7 +736,6 @@ bool IfStmt(istream& in, int& line){
 		if (l == ELSE){
 			//Execute the else stmt
 			status = Stmt(in, line);
-			cout << "In else" << endl;
 
 			//If it fails return false
 			if(!status){
