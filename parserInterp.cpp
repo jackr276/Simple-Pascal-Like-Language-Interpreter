@@ -1073,3 +1073,68 @@ bool RelExpr(istream& in, int& line, Value& retVal){
 	//If we end up here, all went well
 	return true;
 }
+
+
+//SimpleExpr :: Term { ( + | - ) Term }
+bool SimpleExpr(istream& in, int& line, Value& retVal){
+	bool status;
+	LexItem l;
+
+	//We should see a valid term first
+	status = Term(in, line, retVal);
+
+	//Throw error if invalid
+	if(!status){
+		return false; //FIXME potentiall want an error here
+	}
+
+	//once we're here, we can see 0 or many + and -
+	l = Parser::GetNextToken(in, line);
+
+	//So as long as we have plus or minus, we keep processing
+	while (l == PLUS || l == MINUS) {
+		//Secondary value for the other term
+		Value val;
+
+		//Process the next term
+		status = Term(in, line, val);
+
+		//If we have a bad term, throw error
+		if(!status) {
+			//ParseError(line, "Invalid term in expression.");
+			return false;
+		}
+
+		//Once we're here, we process the arithmetic accordingly, using our overloaded operators
+		if (l == PLUS){
+			retVal = retVal + val;
+		}
+
+		if (l == MINUS){
+			retVal = retVal - val;
+		}
+
+		//If somehow retVal is now an error, that means something didn't work, so exit accordingly
+		if (retVal.IsErr()){
+			ParseError(line, "Illegal arithmetic operation");
+			return false;
+		}
+
+		//Refresh l
+		l = Parser::GetNextToken(in, line);
+	}
+
+	//If lexeme is unknown, throw error
+	if (l == ERR) {
+		ParseError(line, "Unrecognized input pattern.");
+		cout << "(" << l.GetLexeme() << ")";
+		return false;
+	}
+
+	//Once we're here, we know l wasn't + or -, so we're done
+	//Push l back and return status
+	Parser::PushBackToken(l);
+
+	//All went well if we end up here
+	return true;
+}
