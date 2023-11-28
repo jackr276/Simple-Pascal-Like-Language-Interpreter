@@ -1138,3 +1138,77 @@ bool SimpleExpr(istream& in, int& line, Value& retVal){
 	//All went well if we end up here
 	return true;
 }
+
+
+//Term ::= SFactor { ( * | / | DIV | MOD ) SFactor }
+bool Term(istream& in, int& line, Value& retVal){
+	bool status;
+	LexItem l;
+
+	//We must first see a valid Sfactor
+	status = SFactor(in, line, retVal);
+
+	//If SFactor is bad, no point in continuing
+	if (!status) {
+		//ParseError(line, "Bad SFactor in term.");
+		return false;
+	}
+
+	//We can now see 0 or more *, /, DIV, or MODs followed by sfactors
+	l = Parser::GetNextToken(in, line);
+
+	//If we have any of these, process the next sfactor
+	while (l == MULT || l == DIV || l == IDIV || l == MOD) {
+		//Value for storing the other sFactor value
+		Value val;
+
+		//Process the other SFactor
+		status = SFactor(in, line, val);
+
+		//If SFactor is bad, no point in continuing
+		if (!status) {
+			ParseError(line, "Missing operand after operator.");
+			return false;
+		}
+
+		//Now we need to use our overloaded operators to process our values
+		switch(l.GetToken()){
+			case MULT:
+				retVal = retVal * val;
+			
+			case DIV:
+				retVal = retVal / val;
+
+			case IDIV:
+				retVal = retVal.idiv(val);
+			
+			case MOD:
+				retVal = retVal % val;
+		}
+
+		//If we get here and retVal is now Err, throw error
+		if(retVal.IsErr()){
+			ParseError(line, "Runtime Error: Illegal operand use");
+			return false;
+		}
+
+		//Refresh l
+		l = Parser::GetNextToken(in, line);
+	}
+
+	//If we get here, we've had valid sfactors and l is no longer *. /, MOD or DIV
+	//make sure l isn't an ERR
+	if (l == ERR) {
+		ParseError(line, "Unrecognized input pattern.");
+		cout << "(" << l.GetLexeme() << ")" << endl;
+		return false;
+	}
+
+	//If no error, push token back and return status
+	Parser::PushBackToken(l);
+
+	//If we get here, all went well
+	return true;
+}
+
+

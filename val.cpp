@@ -124,6 +124,15 @@ Value Value::operator*(const Value& op) const{
 
 //division may occur only between ints and reals
 Value Value::operator/(const Value& op) const{
+    //Check for division by zero
+    if(op.IsInt() && op.GetInt() == 0){
+        return Value();
+    }
+
+    if(op.IsReal() && op.GetReal() == 0.0){
+        return Value();
+    }
+
     switch(GetType()){
         //If we have an int, we can divide with either a real or an int
         case VINT:
@@ -165,7 +174,13 @@ Value Value::operator%(const Value& oper) const{
     if(GetType() != VINT || oper.GetType() != VINT){
         return Value();
     }
-    //If we get here, we have two ints and this is valid
+
+    //Can't mod by zero either
+    if(oper.GetInt() == 0){
+        return Value();
+    }
+
+    //If we get here, we have two ints and no modding by zero, so this is valid
     return(GetInt() % oper.GetInt());
 }
 
@@ -173,6 +188,15 @@ Value Value::operator%(const Value& oper) const{
 //Performs numeric integer division on this by the operator
 // FIXME potentially here -> not entirely sure how this is supposed to work or how its different from idiv 
 Value Value::div(const Value& oper) const{
+     //Check for division by zero
+    if(oper.IsInt() && oper.GetInt() == 0){
+        return Value();
+    }
+
+    if(oper.IsReal() && oper.GetReal() == 0.0){
+        return Value();
+    }
+
     //We can only work with ints and reals, but everything must be cast to an int in the end
     switch(GetType()){
         case VINT:
@@ -313,6 +337,15 @@ Value Value::operator<(const Value& op) const{
 //Performs numeric integer division on this by the operator
 // FIXME potentially here -> not entirely sure how this is supposed to work or how its different from idiv 
 Value Value::idiv(const Value& op) const{
+    //Check for division by zero
+    if(op.IsInt() && op.GetInt() == 0){
+        return Value();
+    }
+
+    if(op.IsReal() && op.GetReal() == 0.0){
+        return Value();
+    }
+
     //We can only work with ints and reals, but everything must be cast to an int in the end
     switch(GetType()){
         case VINT:
