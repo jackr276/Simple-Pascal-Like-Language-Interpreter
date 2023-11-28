@@ -1,7 +1,7 @@
 program circle;
 var
 	{Clean program testing if statement else-clause}
-	r, a, p, b : real; 
+	r, a, p, b : real;
 	flag : boolean := true;
 	i, j : integer := 0;
 	str : string := 'End of Program';	

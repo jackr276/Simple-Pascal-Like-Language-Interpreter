@@ -286,6 +286,7 @@ bool DeclStmt(istream& in, int& line){
                         //Everything in our declstmt will have the same type, so set it all to that type
                         TempsResults[var] = val;
                     }
+					break;
 
                 } else {
                     //Otherwise we fail here
@@ -299,6 +300,7 @@ bool DeclStmt(istream& in, int& line){
                     for(auto var : tempSet){
                         TempsResults[var] = val;
                     }
+					break;
 
                 } else {
                     ParseError(line, "Illegal Assignment Operation");
@@ -311,6 +313,7 @@ bool DeclStmt(istream& in, int& line){
                     for(auto var : tempSet){
                         TempsResults[var] = val;
                     }
+					break;
 
                 //here is the special case, cast to the type of the LHS(t in our case)
                 } else if(val.IsInt()){
@@ -320,6 +323,7 @@ bool DeclStmt(istream& in, int& line){
                     for(auto var : tempSet){
                         TempsResults[var] = val;
                     }
+					break;
 
                 } else {
                     ParseError(line, "Illegal Assignment Operation");
@@ -332,6 +336,7 @@ bool DeclStmt(istream& in, int& line){
                     for(auto var : tempSet){
                         TempsResults[var] = val;
                     }
+					break;
 
                 //another special case here, cast to the LHS of INT in this case
                 } else if(val.IsReal()) {
@@ -341,6 +346,8 @@ bool DeclStmt(istream& in, int& line){
                     for(auto var : tempSet){
                         TempsResults[var] = val;
                     }
+					break;
+
                 } else {
                     ParseError(line, "Illegal Assignment Operation");
                     return false;
@@ -430,6 +437,7 @@ bool StructuredStmt(istream& in, int& line){
 				return false;
 			}
 			return true;
+
 		//Compound statements begin with in
 		case BEGIN:
 			return CompoundStmt(in, line);
@@ -447,37 +455,49 @@ bool StructuredStmt(istream& in, int& line){
 */
 bool CompoundStmt(istream& in, int& line){
 	LexItem l;
-	LexItem lookAhead;
 	//If we got here we already have consumed a BEGIN
 	bool status = Stmt(in, line);
 
-    //keep calling stmt until we have a failure
-	while(status) {
-		l = Parser::GetNextToken(in, line);
-		if (l != SEMICOL && l != END){
-			ParseError(line, "Missing Semicolon in Compound statement.");
+	//If status was bad, no point in continuing
+	if(!status){
+		ParseError(line, "Invalid Statement in Compound Statement");
+		return false;
+	}
+
+	//Get the next token for analysis
+	l = Parser::GetNextToken(in, line);
+
+	//While we have a semicol, keep processing stmts
+	while(l == SEMICOL){
+		//Process the next stmt
+		status = Stmt(in, line);
+
+		//If status was bad, no point in continuing
+		if(!status){
+			ParseError(line, "Invalid Statement in Compound Statement");
 			return false;
 		}
 
-		status = Stmt(in, line);
+		//refresh l
+		l = Parser::GetNextToken(in, line);
 	}
 
-	if (l == ERR) {
-		ParseError(line, "Unrecognized Input Pattern");
-		//print out the unrecognized input
-		cout << "(" << l.GetLexeme() << ")" << endl;
+	//If we get here, we know l was not a SEMICOL
+	//check for err
+	if(l == ERR){
+		ParseError(line, "Unrecognized input pattern.");
+		cout << "(" << l.GetLexeme() << ")";
 		return false;
 	}
 
-
-	if (l != END) {
-		line++;
-		ParseError(line, "Missing END in compound statement.");
-		return false;
+	//If we have an end, consume it and return true
+	if(l == END){
+		//we're done here
+		return true;
 	}
 
-	//If we make it to this point, we had valid expressions and saw END, so return true
-	return true;
+	//Otherwise, we have no end and this is false
+	return false;
 }
 
 
@@ -602,7 +622,7 @@ bool WriteStmt(istream& in, int& line){
 }
 
 
-// Processing all IF statements, 
+// Processing all IF statements
 // IfStmt ::= IF Expr THEN Stmt [ ELSE Stmt ]
 bool IfStmt(istream& in, int& line){
 	LexItem l;
@@ -625,8 +645,7 @@ bool IfStmt(istream& in, int& line){
 		return false;
 	}
 
-	//if we get here, then we had a valid expression. Next token must be THEN
-	l = Parser::GetNextToken(in, line);
+	l = Parser::GetNextToken(in, line); 
 
 	//If its unknown, throw error
 	if (l == ERR ){
@@ -644,7 +663,7 @@ bool IfStmt(istream& in, int& line){
 	//Once we're here we know we have ::= IF expr = true THEN stmt 
 	
 	//If val is true, execute the stmt and return
-	if (val.GetBool() == true){
+	if (val.GetBool()){
 		//Exceute the stmt
 		status = Stmt(in, line);
 		
@@ -657,7 +676,7 @@ bool IfStmt(istream& in, int& line){
 		//we also need to "skip over" the entire else statement if this is the case
 		l = Parser::GetNextToken(in, line);
 		
-		//Skip over until l is a semicol
+		//Skip over until l is a semicol //This does not work
 		while(l != SEMICOL) {
 			//Catch any errors we might see while we're at it
 			if (l == ERR){
@@ -666,12 +685,20 @@ bool IfStmt(istream& in, int& line){
 				return false;
 			}
 
+			//we are in a compound statement, skip until we see end
+			if (l == BEGIN){
+				LexItem cs;
+				while(cs != END){
+					cs = Parser::GetNextToken(in, line);
+				}
+			}
+
 			l = Parser::GetNextToken(in, line);
 		}
 		
 		//We will have consumed one extra token by here, so return it
 		Parser::PushBackToken(l);
-
+	
 	} else {
 		//If we get here the val was false, so there are 2 options based on whether or not there is an ELSE
 		l = Parser::GetNextToken(in, line);
@@ -701,10 +728,11 @@ bool IfStmt(istream& in, int& line){
 		if (l == ELSE){
 			//Execute the else stmt
 			status = Stmt(in, line);
+			cout << "In else" << endl;
 
 			//If it fails return false
 			if(!status){
-				ParseError(line, "Invalid stmt in IF-ELSE stmt");
+				ParseError(line, "Invalid stmt in IF-ELSE stmt else block");
 				return false;
 			}
 		}
@@ -777,6 +805,7 @@ bool AssignStmt(istream& in, int& line){
 				TempsResults[var] = val;
 				return true;
 			}
+			break;
 
 		case BOOLEAN:
 			//Types also must match for booleans
@@ -784,6 +813,7 @@ bool AssignStmt(istream& in, int& line){
 				TempsResults[var] = val;
 				return true;
 			}
+			break;
 
 		case REAL:
 			//they match, nothing to do here
@@ -800,6 +830,7 @@ bool AssignStmt(istream& in, int& line){
 				TempsResults[var] = val;
 				return true;
 			}
+			break;
 
 		case INTEGER:
 			//they match, nothing to do here
@@ -816,6 +847,7 @@ bool AssignStmt(istream& in, int& line){
 				TempsResults[var] = val;
 				return true;
 			}
+			break;
 
 		//We should never get here in theory, added to remove compile warnings
 		default:
@@ -1017,8 +1049,8 @@ bool RelExpr(istream& in, int& line, Value& retVal){
 	//We should first see a valid SimpleExpr
 	status = SimpleExpr(in, line, retVal);
 
+	//return false if bad
 	if (!status) {
-		ParseError(line, "Invalid Simple Expression in Relational Expression");
 		return false;
 	}
 
@@ -1031,9 +1063,8 @@ bool RelExpr(istream& in, int& line, Value& retVal){
 		//Process the simpleExpr following this
 		status = SimpleExpr(in, line, val);
 
-		//Throw error if bad
+		//return false if bad
 		if(!status) {
-			ParseError(line, "Invalid Simple Expression in Relational Expression.");
 			return false;
 		}
 
@@ -1041,21 +1072,25 @@ bool RelExpr(istream& in, int& line, Value& retVal){
 		switch(l.GetToken()){
 			case EQ:
 				retVal = retVal == val;
+				break;
 
 			case GTHAN:
 				retVal = retVal > val;
+				break;
 
 			case LTHAN:
 				retVal = retVal < val;
+				break;
 			
 			//We won't ever get here, added to remove compile warnings
 			default:
 				return false;
 		}
 
-		//If we have an error here, retVal or Val were non-boolean, and the relational operation failed
-		if (retVal.IsErr()){
-			ParseError(line, "Illegal use of non-boolean operand with relational operators");
+		if(!retVal.IsErr()){
+			return true;
+		} else {
+			ParseError(line, "Bad relational operation");
 			return false;
 		}
 	}
@@ -1101,7 +1136,6 @@ bool SimpleExpr(istream& in, int& line, Value& retVal){
 
 		//If we have a bad term, throw error
 		if(!status) {
-			//ParseError(line, "Invalid term in expression.");
 			return false;
 		}
 
@@ -1175,15 +1209,23 @@ bool Term(istream& in, int& line, Value& retVal){
 		switch(l.GetToken()){
 			case MULT:
 				retVal = retVal * val;
+				break;
 			
 			case DIV:
 				retVal = retVal / val;
+				break;
 
 			case IDIV:
 				retVal = retVal.idiv(val);
+				break;
 			
 			case MOD:
 				retVal = retVal % val;
+				break;
+			
+			//We won't ever get here, added to remove compile warnings on vocareum
+			default:
+				return false;
 		}
 
 		//If we get here and retVal is now Err, throw error
@@ -1215,7 +1257,6 @@ bool Term(istream& in, int& line, Value& retVal){
 // SFactor can have an optional sign in front of it
 // SFactor ::= [( - | + | NOT )] Factor
 bool SFactor(istream& in, int& line, Value& retVal){
-	
 	//Get the token for processing
 	LexItem l = Parser::GetNextToken(in, line); 
 
