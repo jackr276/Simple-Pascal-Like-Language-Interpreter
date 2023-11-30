@@ -23,9 +23,24 @@ Mathematically, any context-free grammar _G_ is defined as the 4-tuple $G = (V, 
 
 | Usage | Notation | Description |
 | ----- | -------- | -------------- |
-| Terminal String | Any text enclosed in single quotes (' ')| Terminals are the lexical foundation of the language. They are symbols that cannot be changed using the rules of the grammar. The final output after applying all grammar rules will be a string of terminals |
-| Nonterminal String | Any **bolded** text | | Nonterminals, or _syntactic variables_, are symbols that can be replaced. |
-|Repetition Operator|{}|Indicates that the sequence of terminals and nonterminals inside may be repeated _0 or more times_|
+| Language Terminals | Any UPPERCASE text| Terminals are the lexical foundation of the language. They are symbols that cannot be changed using the rules of the grammar. The final output after applying all grammar rules will be a string of terminals. The terminals that are in this language are further defined below|
+| Language Nonterminals | Any **bolded** text | Nonterminals, or _syntactic variables_, are symbols that can be replaced. |
+|Optional Repetition|{. . . . .}|Indicates that the sequence of terminals and nonterminals inside may be repeated _0 or many times_|
+|Optional Inclusion|[. . . . .]|Indicates that the sequence of terminals and nonterminals inside may be used _not at all or 1 time_|
+|Grouping|(. . . . .)|Indicates that the sequence of terminals and nonterminals inside are grouped together. Usually seen used with the \| operator|
+|Concatenation|    ,    |Inidicates concatenation of items |
+|Alternation|    \|    |Indicates that items on the left or right are used "either-or"|
+|Definition| ::= | The non-terminal on the left of the definition operator is defined as the sequence of terminals and nonterminals on the right of the operator|
+
+Additionally, there are specific rules for the different types of terminals that our language has, listed below.
+| Terminals | Description | Regular Expression Notation | Valid Examples | Invalid Examples |
+|----|---------|------|-------|----|
+|IDENT| An identifier is a user-defined program variable| IDENT := Letter {( Letter \| Digit \| _ \| $ )} <br /> Letter := [ a-z A-Z ] <br /> Digit := [0-9]|hello$, myVar, first_name|$hello, 1st_name, _name|
+|SCONST|A string constant is defined as a sequence of characters enclosed in single quotes|SCONST := 'Any Character string'|'Hello $5 #., s9 my name is', 'hello'|"This is an invalid string due to the double quotes"|
+|ICONST|An integer constant is any valid integer|ICONST := [0-9]+|2, 200, 3444|-68, 9.56|
+|RCONST|A real constant is any valid real number|RCONST := ([0-9]+)\.([0-9]*)|9.01, 0.2, 2.|.2, 2.3.4|
+|BCONST|A boolean constant is either true or false| BCONST := (true \| false)|true, false|tRuE, FALSE|
+
 
 
 
