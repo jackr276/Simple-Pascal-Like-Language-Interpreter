@@ -32,6 +32,32 @@ Mathematically, any context-free grammar _G_ is defined as the 4-tuple $G = (V, 
 |Alternation|    \|    |Indicates that items on the left or right are used "either-or"|
 |Definition| ::= | The non-terminal on the left of the definition operator is defined as the sequence of terminals and nonterminals on the right of the operator|
 
+With this brief introduction in mind, let's take a look at the EBNF ruleset for the language implemented in this project.
+
+## EBNF Rules For This Language
+
+ 1. **Prog** ::= PROGRAM IDENT ; **DeclPart** **CompoundStmt**
+ 2. **DeclPart** ::= VAR **DeclStmt** { ; **DeclStmt** }
+ 3. **DeclStmt** ::= IDENT {, IDENT } : **Type** [:= **Expr**]
+ 4. **Type** ::= INTEGER | REAL | BOOLEAN | STRING
+ 5. **Stmt** ::= **SimpleStmt** | **StructuredStmt**
+ 6. **SimpleStmt** ::= **AssignStmt** | **WriteLnStmt** | **WriteStmt**
+ 7. **StructuredStmt** ::= **IfStmt** | **CompoundStmt**
+ 8. **CompoundStmt** ::= BEGIN **Stmt** {; **Stmt** } END
+ 9. **WriteLnStmt** ::= WRITELN (**ExprList**)
+ 10. **WriteStmt** ::= WRITE (**ExprList**)
+ 11. **IfStmt** ::= IF **Expr** THEN **Stmt** [ ELSE **Stmt** ]
+ 12. **AssignStmt** ::= **Var** := **Expr**
+ 13. **Var** ::= IDENT
+ 14. **ExprList** ::= **Expr** { , **Expr** }
+ 15. **Expr** ::= **LogOrExpr** ::= **LogAndExpr** { OR **LogAndExpr** }
+ 16. **LogAndExpr** ::= **RelExpr** {AND **RelExpr** }
+ 17. **RelExpr** ::= **SimpleExpr** [ ( = | < | > ) **SimpleExpr** ]
+ 18. **SimpleExpr** :: **Term** { ( + | - ) **Term** }
+ 19. **Term** ::= **SFactor** { ( * | / | DIV | MOD ) **SFactor** }
+ 20. **SFactor** ::= [( - | + | NOT )] **Factor**
+ 21. **Factor** ::= IDENT | ICONST | RCONST | SCONST | BCONST | (**Expr**)
+
 Additionally, there are specific rules for the different types of terminals that our language has, listed below.
 | Terminals | Description | Regular Expression Notation | Valid Examples | Invalid Examples |
 |----|---------|------|-------|----|
@@ -44,6 +70,6 @@ Additionally, there are specific rules for the different types of terminals that
 
 
 
-## EBNF Rules For This Language
+
 
 ## Compiling/Running this program
