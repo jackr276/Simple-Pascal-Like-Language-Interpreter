@@ -14,8 +14,10 @@ EBNF is a notation/ruleset for formally describing context-free grammars. Contex
 Mathematically, any context-free grammar _G_ is defined as the 4-tuple $G = (V, \Sigma, R, S)$, such that
  1. $V$ is the finite set of all non-terminals $v \in V$ where each element _v_ is a non-terminal character. Every non-terminal character is a character that cannot be changed the rules of the language.
  2. $\Sigma$ is the finite set of all terminals such that $\Sigma \cap V = \varnothing$. The set of terminals are defined by the language.
- 3. $R$ is a finite subset of the binary relation defined as $V \times (V \cup \Sigma)^\*$ where $\beta \in (V \cup \Sigma)^\*$ is a string of variables/terminals.
+ 3. $R$ is a finite subset of the binary relation defined as $V \times (V \cup \Sigma)^\*$ where $\beta \in (V \cup \Sigma)^\*$ is a string of terminals and non-terminals.
  5. $S$ is the start/entry symbol for the program. It is necessary that $S \in V$.
+
+With this, we have explored the mathematical foundation for context-free grammars. As stated above, EBNF meta-syntax is used to describe context-free grammars, which are the foundation for all programming languages, including the langauge inmplemented in this project. The table below is a handy "cheat sheet" that contains everything that you need to know to understand the EBNF rules for this language.
 
 >[!Important]
 > Listed below is the notation that will be used in the formal EBNF definition of this programming language in the next section. It is important that this notation is understood before reading the rules for this language.
