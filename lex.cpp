@@ -115,21 +115,22 @@ ostream& operator<<(ostream& out, const LexItem& tok) {
 
 LexItem getNextToken(istream& in, int& linenum)
 {
-	enum TokState { START, INID, INSTRING, ININT, INREAL, INCOMMENT } lexstate = START;
+	enum TokState { START, INID, INSTRING, ININT, INREAL, INCOMMENT } 
+	lexstate = START;
 	string lexeme;
 	char ch, nextchar;
 	Token tt;
 	bool decimal = false;
 	       
-	//cout << "in getNestToken" << endl;
+	
     while(in.get(ch)) {
-    	//cout << "in while " << ch << endl;
+    	
 		switch( lexstate ) {
 		case START:
 			if( ch == '\n' )
 			{
 				linenum++;
-				//cout << linenum << endl;
+				
 			}	
                 
 			if( isspace(ch) )
@@ -308,8 +309,3 @@ LexItem getNextToken(istream& in, int& linenum)
 		
 	return LexItem(ERR, "some strange I/O error", linenum);
 }
-
-
-
-
-
