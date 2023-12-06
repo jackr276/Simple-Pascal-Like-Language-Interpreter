@@ -1,7 +1,6 @@
 /*
  * lex.cpp
  * Lexical Analyzer for Simple Pascal-Like Language
- * CS280 - Fall 2023
  */
 
 #include <cctype>
