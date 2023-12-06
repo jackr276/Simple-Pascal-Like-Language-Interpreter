@@ -224,13 +224,12 @@ LexItem getNextToken(istream& in, int& linenum)
 
 		case INID:
 			if( isalpha(ch) || isdigit(ch) || ch == '_' || ch == '$') {
-							
-				//cout << "in id continued" << ch << endl;
+		
 				lexeme += ch;
 			}
 			else {
 				in.putback(ch);
-				//cout << lexeme << endl;
+
 				return id_or_kw(lexeme, linenum);
 				
 			}
