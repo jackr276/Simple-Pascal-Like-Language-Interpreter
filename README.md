@@ -69,10 +69,28 @@ With this brief introduction in mind, let's take a look at the EBNF ruleset for 
  20. **SFactor** ::= [( - | + | NOT )] **Factor**
  21. **Factor** ::= IDENT | ICONST | RCONST | SCONST | BCONST | (**Expr**)
 
-### Rules for terminals
+With this description of our langauge in mind, let's explore the project's structure and function.
 
-Additionally, there are specific rules for the different types of terminals that our language has, listed below.
-| Terminal | Description | Regular Expression Definition | Valid Examples | Invalid Examples |
+## Project Structure/Design Philosophy
+
+This project is made up of 2 main components that work in tandem to achieve the goal of running a file that the user gives to us in our coding language. Additionally, there are several, less important components. Those will be covered towards throughout the explaination, but have not been given their own individual sections
+
+The 2 main components are: the tokenizer/lexical analyzer, in [lex.cpp](https://github.com/jackr276/Simple-Pascal-Like-Language-Interpreter/blob/main/lex.cpp) and
+the Parser/Interpreter, in [parserInterp.cpp](https://github.com/jackr276/Simple-Pascal-Like-Language-Interpreter/blob/main/parserInterp.cpp). Let's explore each program individually.
+
+## Tokenizing/Lexical Analysis in [lex.cpp](https://github.com/jackr276/Simple-Pascal-Like-Language-Interpreter/blob/main/lex.cpp)
+
+Tokenizing/Lexical analysis refers to effectively translating a program file that a user has written into a a stream of tokens that we can use to run the program. **lex.cpp** is responsible for just this task. 
+
+This is accomplished through the main function of **lex.cpp**:
+
+```cpp 
+Lexitem getNextToken(istream& in, int& linenum)
+```
+This function takes a reference to an istream object and a reference to an integer as the line number, and acts as a state machine to go through the characters that its currently at, and classify them as a token accordingly
+
+
+| Token | Description | Regular Expression Definition | Valid Examples | Invalid Examples |
 |----|---------|------|-------|----|
 |IDENT| An identifier is a user-defined program variable| IDENT := Letter {( Letter \| Digit \| _ \| $ )} <br /> Letter := [ a-z A-Z ] <br /> Digit := [0-9]|hello$, myVar, first_name|$hello, 1st_name, _name|
 |SCONST|A string constant is defined as a sequence of characters enclosed in single quotes|SCONST := 'Any Character string'|'Hello $5 #., s9 my name is', 'hello'|"This is an invalid string due to the double quotes"|
@@ -82,33 +100,55 @@ Additionally, there are specific rules for the different types of terminals that
 
 ### Reserved Words
 
-Furthermore, our language has certain reserved words. A reserved word is a word that may not be used as a variable name by the programmer, as the word has some syntactic function in the language.
+Furthermore, our language has certain reserved words. A reserved word is a word that may not be used as a variable name by the programmer, as the word has some syntactic function in the language. For the sake of brevity, the tokens that these reserved words are tokenized into are also included here. The tokens will make more sense as you read on.
 
-|Reserved Word|
-|------------|
-|and|
-|begin|
-|boolean|
-|div|
-|end|
-|else|
-|false|
-|if|
-|integer|
-|mod|
-|not|
-|or|
-|program|
-|real|
-|string|
-|write|
-|writeln|
-|var|
-|true|
-|false|
+|Reserved Word| Token |
+|------------| -----|
+|and|AND|
+|begin|BEGIN|
+|boolean|BOOLEAN|
+|div|DIV|
+|end|END|
+|else|ELSE|
+|false|FALSE|
+|if|IF|
+|integer|INTEGER|
+|mod|MOD|
+|not|NOT|
+|or|OR|
+|program|PROGRAM|
+|real|REAL|
+|string|STRING|
+|write|WRITE|
+|writeln|WRITELN|
+|var|VAR|
+|true|TRUE|
+|false|FALSE|
 
 ### Operator Symbols/Keywords
 
+Our language also has various arithmetic/logical operators that can be used. The table below shows the operands and their functions. Just like with the reserved words, the tokens for each operator/keyword are included in this table
+
+|Operator Symbol/Keyword|Token|Description|
+|-------------------|----------|-----|
+|+|PLUS|Arithmetic addition or concatenation|
+|-|MINUS|Arithmetic subtraction|
+|*|MULT|Multiplication|
+|/|DIV|Division|
+|:=|ASSOP|Assignment operator|
+|=|EQ|Equality|
+|<|LTHAN|Less than operator|
+|>|GTHAN|Greater than operator|
+|and|AND|Logical conjunction|
+|or|OR|Logical disjunction|
+|not|NOT|Logical complement|
+|div|IDIV|Integer division|
+|mod|MOD|Modulos operator|
+
+
+### Delimiters
+
+Our language also has various delimiters that have certain syntactic meanings. The table below shows the delimiter characters, their tokens and descriptions
 
 
 
