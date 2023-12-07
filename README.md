@@ -239,10 +239,150 @@ With that, we have covered everything in **lex.cpp**. As stated before, once a t
  - Relational operators(=, <, >) operate only on two compatible types
  - Unary sign operators(+/-) operate only on numeric types, whereas the unary NOT operator operates only on booleans
 
-Operator Precedence and Associativity:
+**Operator Precedence and Associativity**
+>[!Note]
+>Items with a lower precedence level get executed first
+
+|Precedence Level|Operator|Description|Associativity|
+|--|--|--|--|
+|1|Unary +, - , not|Operates on a single numeric or boolean operand|Right-to-left|
+|2|*, / , div, mod|Operate on two numeric operands|Left-to-right|
+|3|+, -|Arithmetic addition and subctraction|Left-to-right|
+|4|<, >, =|Relational copmarison|No cascading|
+|5|and|Logical conjunction|Left-to-right|
+|6|or|Logical disjunction|Left-to-right|
+
+**parserInterp.cpp** is also designed to check for valid syntax accordig to these rules, and to obey the operator precedence. It achieces the latter through its design as a recursive-descent parse tree.
+
+### Design/Functionality of **parserInterp.cpp**
+
+The program **parserInterp.cpp** is designed as an implicit recursive-descent parse tree. That is, direct recursion is not a part of its overall design. It achieves recursion through its design, and how every function calls the function below it on the parse-tree. There is no explicit parse-tree either, but instead an implicit one that is created based on how methods call eachother.
+
+**Recall our EBNF Ruleset from above**:
+
+ 1. **Prog** ::= PROGRAM IDENT ; **DeclPart** **CompoundStmt**
+ 2. **DeclPart** ::= VAR **DeclStmt** { ; **DeclStmt** }
+ 3. **DeclStmt** ::= IDENT {, IDENT } : **Type** [:= **Expr**]
+ 4. **Type** ::= INTEGER | REAL | BOOLEAN | STRING
+ 5. **Stmt** ::= **SimpleStmt** | **StructuredStmt**
+ 6. **SimpleStmt** ::= **AssignStmt** | **WriteLnStmt** | **WriteStmt**
+ 7. **StructuredStmt** ::= **IfStmt** | **CompoundStmt**
+ 8. **CompoundStmt** ::= BEGIN **Stmt** {; **Stmt** } END
+ 9. **WriteLnStmt** ::= WRITELN (**ExprList**)
+ 10. **WriteStmt** ::= WRITE (**ExprList**)
+ 11. **IfStmt** ::= IF **Expr** THEN **Stmt** [ ELSE **Stmt** ]
+ 12. **AssignStmt** ::= **Var** := **Expr**
+ 13. **Var** ::= IDENT
+ 14. **ExprList** ::= **Expr** { , **Expr** }
+ 15. **Expr** ::= **LogOrExpr** ::= **LogAndExpr** { OR **LogAndExpr** }
+ 16. **LogAndExpr** ::= **RelExpr** {AND **RelExpr** }
+ 17. **RelExpr** ::= **SimpleExpr** [ ( = | < | > ) **SimpleExpr** ]
+ 18. **SimpleExpr** :: **Term** { ( + | - ) **Term** }
+ 19. **Term** ::= **SFactor** { ( * | / | DIV | MOD ) **SFactor** }
+ 20. **SFactor** ::= [( - | + | NOT )] **Factor**
+ 21. **Factor** ::= IDENT | ICONST | RCONST | SCONST | BCONST | (**Expr**)
+
+Every bolded word has its own method defined in parserInterp.cpp, as shown in this function signatures from the header file **parserInterp.h**
+```cpp
+extern bool Prog(istream& in, int& line);
+extern bool DeclPart(istream& in, int& line);
+extern bool DeclStmt(istream& in, int& line);
+extern bool Stmt(istream& in, int& line);
+extern bool StructuredStmt(istream& in, int& line);
+extern bool CompoundStmt(istream& in, int& line);
+extern bool SimpleStmt(istream& in, int& line);
+extern bool WriteLnStmt(istream& in, int& line);
+extern bool WriteStmt(istream& in, int& line);
+extern bool IfStmt(istream& in, int& line);
+extern bool AssignStmt(istream& in, int& line);
+extern bool Var(istream& in, int& line, LexItem & idtok);
+extern bool ExprList(istream& in, int& line);
+extern bool Expr(istream& in, int& line, Value & retVal);
+extern bool LogANDExpr(istream& in, int& line, Value & retVal);
+extern bool RelExpr(istream& in, int& line, Value & retVal);
+extern bool SimpleExpr(istream& in, int& line, Value & retVal);
+extern bool Term(istream& in, int& line, Value & retVal);
+extern bool SFactor(istream& in, int& line, Value & retVal);
+extern bool Factor(istream& in, int& line, Value & retVal, int sign);
+```
+
+Through this, we achieve a recursive-descent parse tree. 
+
+Here is an example to make things clear: **Stmt** calls **StructuredStmt** which then calls **CompoundStmt** which then calls **Stmt**
+
+As you can see here, statement does not directly call itself, but it triggers a series of other function calls that lead to it being called again. Through indirect left recursion, we generate a parse tree that analyzes the syntax of each respective component of the language, and evaluates it accordingly.
+
+Speaking of evaluation and values, there is a third program that we have not yet discussed, being [val.cpp](https://github.com/jackr276/Simple-Pascal-Like-Language-Interpreter/blob/main/val.cpp). **val.cpp** and the header file **val.h** contain the definition of the **Value** class, which is the class that is used to store all of the returned values in our program.
+
+The definition of the **Value** class is as follows
+```cpp
+enum ValType { VINT, VREAL, VSTRING, VBOOL, VERR };
+
+class Value {
+    ValType	T;
+    bool    Btemp;
+    int     Itemp;
+    double  Rtemp;
+    string  Stemp;
+```
+
+Additionally, **val.cpp** contains overloaded operators so that we can do operations between two objects of the Value class. Their signatures are as follows:
+```cpp
+    // numeric overloaded add this to op
+    Value operator+(const Value& op) const;
+    
+    // numeric overloaded subtract op from this
+    Value operator-(const Value& op) const;
+    
+    // numeric overloaded multiply this by op
+    Value operator*(const Value& op) const;
+    
+    // numeric overloaded divide this by oper
+    Value operator/(const Value& op) const;
+    
+    // numeric overloaded modulus of this by oper
+    Value operator%(const Value& oper) const;
+    
+    //numeric integer division this by oper
+    Value div(const Value& oper) const;
+    
+    
+    //overloaded equality operator of this with op
+    Value operator==(const Value& op) const;
+    //overloaded greater than operator of this with op
+    Value operator>(const Value& op) const;
+    //overloaded less than operator of this with op
+    Value operator<(const Value& op) const;
+
+    //integer divide operator of this by op
+    Value idiv(const Value& op) const;
+	
+    //Logic operations  
+    Value operator&&(const Value& oper) const;//Overloaded Anding operator
+    Value operator||(const Value& oper) const;//Overloaded Oring operator
+    Value operator!() const;//Overloaded Not/complement operator
+```
 
 
+Every time we execute an expression, and need to save the result, we wrap the result in an instance of the Value class, so that we are able to store the type of the expression's result and the actual value all in one convenient class. This also helps for type checking.
 
-**parserInterp.cpp** is also designed to take into mind operator precedence,
+On the topic of storage, there are several map containers that are important for **parserInterp.cpp**'s function:
+```cpp
+// defVar keeps track of all variables that have been defined in the program thus far
+map<string, bool> defVar;
+// SymTable keeps track of the type for all of our variables
+map<string, Token> SymTable;
+//Container of temporary locations of Value objects for results of expressions, variables values and constants 
+//Key is a variable name, value is its Value. Holds all variables defined by assign statements
+map<string, Value> TempsResults;
+//declare a pointer variable to a queue of Value objects
+queue <Value> * ValQue;
+```
 
-## Compiling/Running this program
+The comments are pretty detailed, but one thing worth mentioning is that ValQue is only used for **write** and **writeln** methods, as it is a queue of all the values to be printed to the console.
+
+All of this comes together for the full functionality of our interpeter. The entry point to the program and the top of our parse tree is the **prog** method. The driver program, **prog3.cpp**, only needs to call the **prog** method and pass in a reference to an istream object to run the entire program contained in the file pointed to by
+the in pointer. Once prog is called, it begins the execution of the parse tree. Every method in the parse tree calls the **GetNextToken** method in **lex.cpp**, checking for syntactic and lexical errors along the way, until the entire program file has been read through and executed, or until a syntactic or lexical error is reached, in which case the program exits.
+
+## Final Summary
+Now that you have a theoretical understanding of how these programs work, I would greatly encourage anyone interested to download the source code and try writing/running your own program in this given programming language. There are various examples of programs given in the **tests** folder here on Github. Happy coding!
