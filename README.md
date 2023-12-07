@@ -221,4 +221,28 @@ With that, we have covered everything in **lex.cpp**. As stated before, once a t
 
 ## Syntax Analysis/Interpretation in [parserInterp.cpp](https://github.com/jackr276/Simple-Pascal-Like-Language-Interpreter/blob/main/parserInterp.cpp)
 
+**parserInterp.cpp** is responsible for performing syntactic analysis and execution for our program. Syntax analysis refers to the validity of a statement in the frame of our grammar rules, as well as certain other cases where invalid syntax/statements may be found. To do this, we should first see a full description of the language.
+
+### Syntactic Description of the Language
+ - There are four basic types: INTEGER, REAL, STRING and BOOLEAN
+ - There are operator precedence and associativty rules(see table below)
+ - An If-statement evaluates a logical expression and executes if it is true, and does not if it isn't. An Else-clause is _optional_ for an If-Statement, and is only evaluate if the logical expression is false
+ - It is an error to use a variable before it has been defined
+ - WRITELN and WRITE statements print out their comma-separated insides from left-to-right
+ - The ASSOP( := ) operator  in the AssignStmt assigns a value to a variable. It evaluates the Expr on the right-hand side and saves its value in a memory location associated with the left-hand side variable (Var). A left-hand side variable of a Numeric type must be assigned a numeric value. Type conversion must be automatically applied 	if the right-hand side numeric value of the evaluated
+	expression does not match the numeric type of the left-hand side
+	variable. While a left-hand side variable of string or Boolean type
+	must be assigned  value of the same type as of the left-hand side
+	variable.
+ - Binary operations for numeric operators may only be performed on numeric operands
+ - Binary operations for boolean operators may only be performed on boolean operands
+ - Relational operators(=, <, >) operate only on two compatible types
+ - Unary sign operators(+/-) operate only on numeric types, whereas the unary NOT operator operates only on booleans
+
+Operator Precedence and Associativity:
+
+
+
+**parserInterp.cpp** is also designed to take into mind operator precedence,
+
 ## Compiling/Running this program
