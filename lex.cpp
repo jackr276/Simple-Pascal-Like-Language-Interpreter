@@ -126,8 +126,7 @@ LexItem getNextToken(istream& in, int& linenum)
     	
 		switch( lexstate ) {
 		case START:
-			if( ch == '\n' )
-			{
+			if( ch == '\n' ){
 				linenum++;
 				
 			}	
