@@ -248,7 +248,7 @@ With that, we have covered everything in **lex.cpp**. As stated before, once a t
 |1|Unary +, - , not|Operates on a single numeric or boolean operand|Right-to-left|
 |2|*, / , div, mod|Operate on two numeric operands|Left-to-right|
 |3|+, -|Arithmetic addition and subctraction|Left-to-right|
-|4|<, >, =|Relational copmarison|No cascading|
+|4|<, >, =|Relational comparison|No cascading|
 |5|and|Logical conjunction|Left-to-right|
 |6|or|Logical disjunction|Left-to-right|
 
