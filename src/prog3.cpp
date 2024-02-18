@@ -1,8 +1,5 @@
-/* Programming Assignment 3
- * 
+/* 
  * main.cpp
- *
- * CS280 - Spring 2023
  * parser and interpreter testing program
  */
 
